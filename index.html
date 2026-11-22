@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#080d18">
+<title>Hadroh Mic Bass + Tam</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#070b14;color:#fff;font-family:Arial,system-ui,sans-serif}
+.wrap{max-width:900px;margin:auto;padding:16px}.head{padding:18px;border:1px solid #30415e;border-radius:20px;background:linear-gradient(135deg,#111d32,#182a45);margin-bottom:14px}
+h1{margin:0;font-size:23px}.sub{color:#aab8cc;font-size:12px;margin-top:6px}
+.card{background:#101827;border:1px solid #293c5c;border-radius:17px;padding:14px;margin-bottom:12px}h2{font-size:15px;margin:0 0 12px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.btn{background:#223450;color:#fff;border:1px solid #3b5275;padding:10px 13px;border-radius:10px;cursor:pointer}.green{background:#126d3a;border-color:#25c875}.red{background:#5a2029;border-color:#9e3745}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field{min-width:140px;flex:1}.field label{display:block;color:#aab8cc;font-size:10px;margin-bottom:4px}.field input,.field select{width:100%;background:#0a1220;color:#fff;border:1px solid #304564;border-radius:9px;padding:8px}
+.pads{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.pad{height:125px;background:linear-gradient(145deg,#1b2a44,#0e1626);border:1px solid #3b5378;border-radius:16px;color:#fff;cursor:pointer}.pad.on{box-shadow:0 0 0 3px #38bdf8,0 0 28px #38bdf844;transform:scale(.98)}.pad b{font-size:24px}.pad small{display:block;color:#9eacc2;margin-top:6px}
+.meter{height:14px;background:#050811;border:1px solid #263b59;border-radius:20px;overflow:hidden}.meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,#22c55e,#eab308,#ef4444)}
+.info{font-size:11px;color:#9eacc2;line-height:1.6}.latency{display:inline-block;margin-top:8px;padding:5px 8px;border:1px solid #245d7a;border-radius:8px;color:#67d9ff;background:#081b28;font-size:10px}.value{font-size:11px;color:#fff;margin-top:3px}
+@media(max-width:600px){.grid{grid-template-columns:1fr}.pads{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="head">
+<h1>🥁 HADROH MIC TRIGGER</h1>
+<div class="sub">PUKUL MIC / SOUND CARD → TERDETEKSI → KELUAR SUARA BASS JEK • TAM</div>
+</div>
+
+<div class="card">
+<h2>🎚️ Koneksi Mic / Soundcard</h2>
+<div class="row">
+<button class="btn green" id="connect">🎤 Hubungkan Mic</button>
+<button class="btn red" id="stop">■ Stop Mic</button>
+<select id="input" style="background:#0a1220;color:#fff;border:1px solid #304564;padding:9px;border-radius:9px;flex:1"></select>
+</div>
+<div style="margin-top:12px"><label style="font-size:10px;color:#aab8cc">Level Mic</label><div class="meter"><i id="meter"></i></div></div>
+<div class="latency">⚡ ULTRA LOW LATENCY • scan setiap sample • multi-hit aktif</div><p class="info">Saat alat hadroh dipukul di depan mic, sistem mendeteksi hentakan suara dan otomatis memainkan bass JEK. Threshold dapat diatur agar tidak mudah terpicu oleh suara kecil.</p>
+</div>
+
+<div class="card">
+<h2>⚙️ Setting Deteksi Pukulan</h2>
+<div class="grid">
+<div class="field"><label>Threshold Pukulan</label><input id="threshold" type="range" min=".01" max=".8" step=".005" value=".16"><div class="value" id="thresholdV"></div></div>
+<div class="field"><label>Jarak Minimum Antar Pukulan (ms)</label><input id="cooldown" type="range" min="20" max="250" step="5" value="35"><div class="value" id="cooldownV"></div></div>
+<div class="field"><label>Sensitivity Bass</label><input id="bassVol" type="range" min="0" max="1.5" step=".01" value=".85"><div class="value" id="bassVolV"></div></div>
+<div class="field"><label>Decay Bass</label><input id="bassDecay" type="range" min=".08" max=".8" step=".01" value=".30"><div class="value" id="bassDecayV"></div></div>
+<div class="field"><label>Attack / Jek</label><input id="attack" type="range" min="0" max="1" step=".01" value=".65"><div class="value" id="attackV"></div></div>
+<div class="field"><label>Low Body</label><input id="body" type="range" min="0" max="1" step=".01" value=".80"><div class="value" id="bodyV"></div></div>
+</div>
+<div class="row" style="margin-top:10px">
+<button class="btn" id="test">🔊 Test Bass</button>
+<button class="btn" id="cal">🎯 Kalibrasi Threshold</button>
+</div>
+</div>
+
+<div class="card">
+<h2>🥁 Suara Manual</h2>
+<div class="pads">
+<button class="pad" id="bass"><b>JEK</b><small>Bass / Kick Hadroh</small></button>
+<button class="pad" id="tam"><b>TAM</b><small>Tam Hadroh</small></button>
+</div>
+<p class="info">Mode ULTRA LOW LATENCY aktif. Tidak ada rolling, echo, atau monitoring mic ke speaker. Pukulan mic langsung memicu bass JEK.</p>
+</div>
+
+<div class="card">
+<h2>🎛️ Monitor</h2>
+<div class="grid">
+<div><div class="info">Status</div><div id="status">Belum terhubung</div></div>
+<div><div class="info">Pukulan terdeteksi</div><div id="hits">0</div></div>
+</div>
+</div>
+
+<div class="card info">
+<b>Tips:</b> arahkan mic/soundcard ke sumber pukulan. Jika bass keluar terus, naikkan <b>Threshold</b>. Jika pukulan tidak terbaca, turunkan Threshold. <b>Cooldown</b> mengatur jarak minimum antar pukulan.
+<br><br>
+Keyboard: <b>1</b> = JEK, <b>2</b> = TAM.
+</div>
+</div>
+
+<script>
+/*
+  ULTRA LOW LATENCY MODE
+  - AudioContext latencyHint: interactive
+  - ScriptProcessorNode 256 samples for fast detection, with per-sample onset scanning
+  - No requestAnimationFrame detection loop
+  - No rolling / echo / monitoring of microphone
+  - Each threshold crossing is scheduled at its sample position on the AudioContext clock
+  - Multiple hits inside one 256-sample block are detected separately
+*/
+let ctx=null,master=null,stream=null,source=null,processor=null,raf=null,lastHitSample=-999999,hits=0;
+let detectPrev=0, detectEnv=0;
+const $=id=>document.getElementById(id);
+const ids=['threshold','cooldown','bassVol','bassDecay','attack','body'];
+
+function show(){
+  ids.forEach(id=>{
+    const v=$(id).value;
+    $(id+'V').textContent=id==='cooldown'?v+' ms':Math.round(+v*100)+'%';
+  });
+}
+show();
+ids.forEach(id=>$(id).oninput=show);
+
+async function devices(){
+  if(!navigator.mediaDevices) return;
+  try{
+    const ds=await navigator.mediaDevices.enumerateDevices();
+    $('input').innerHTML='';
+    ds.filter(d=>d.kind==='audioinput').forEach(d=>{
+      const o=document.createElement('option');
+      o.value=d.deviceId;
+      o.textContent=d.label||'Mic / Soundcard';
+      $('input').appendChild(o);
+    });
+  }catch(e){}
+}
+
+function updateMeterFromRms(rms){
+  $('meter').style.width=Math.min(100,rms*420)+'%';
+}
+
+function processInput(ev){
+  if(!processor || !ctx) return;
+  const ch=ev.inputBuffer.getChannelData(0);
+  const sr=ev.inputBuffer.sampleRate || ctx.sampleRate;
+  const eventTime = Number.isFinite(ev.playbackTime) ? ev.playbackTime : ctx.currentTime;
+  const threshold=+$('threshold').value;
+  const cooldownMs=+$('cooldown').value;
+  const refractory=Math.max(1, Math.round(sr*cooldownMs/1000));
+
+  let sum=0, blockPeak=0;
+  let localHits=0;
+
+  // Scan EVERY SAMPLE instead of treating one 256-sample block as one hit.
+  // This is what allows double/triple strokes to be detected separately.
+  for(let i=0;i<ch.length;i++){
+    const x=ch[i];
+    const ax=Math.abs(x);
+    sum += x*x;
+    if(ax>blockPeak) blockPeak=ax;
+
+    // Very fast envelope follower for transient/onset detection.
+    const release = 0.995;
+    detectEnv = Math.max(ax, detectEnv*release);
+
+    // Trigger on a new threshold crossing, not while the same hit is still loud.
+    const rising = ax >= threshold && detectPrev < threshold;
+    const samplePosition = eventTime + i/sr;
+
+    if(rising && (samplePosition-lastHitSample)>=refractory/sr){
+      lastHitSample=samplePosition;
+      localHits++;
+      hits++;
+      // Schedule at the exact sample position on the audio clock.
+      hitBassAt(ctx.currentTime + i/sr);
+      flash('bass');
+    }
+    detectPrev=ax;
+  }
+
+  const rms=Math.sqrt(sum/ch.length);
+  const level=Math.max(rms,blockPeak*.42);
+  updateMeterFromRms(level);
+
+  if(localHits){ $('hits').textContent=hits; }
+}
+
+async function connect(){
+  try{
+    stop();
+
+    // Interactive mode is the lowest-latency mode exposed by Web Audio.
+    ctx=new AudioContext({latencyHint:'interactive'});
+    await ctx.resume();
+    lastHitSample=-999999;
+    detectPrev=0;
+    detectEnv=0;
+
+    master=ctx.createGain();
+    master.gain.value=1;
+    master.connect(ctx.destination);
+
+    const constraints={
+      audio:{
+        deviceId:$('input').value?{exact:$('input').value}:undefined,
+        echoCancellation:false,
+        noiseSuppression:false,
+        autoGainControl:false,
+        channelCount:1,
+        sampleRate:48000
+      }
+    };
+
+    stream=await navigator.mediaDevices.getUserMedia(constraints);
+    source=ctx.createMediaStreamSource(stream);
+
+    /*
+      ScriptProcessor is intentionally used here instead of a Blob AudioWorklet.
+      It avoids the blob:null/worklet loading failure on some phones/browsers.
+      256 samples at 48 kHz is about 5.3 ms per processing block.
+    */
+    processor=ctx.createScriptProcessor(256,1,1);
+    processor.onaudioprocess=processInput;
+
+    // Keep the processor alive without routing microphone audio to speakers.
+    const silent=ctx.createGain();
+    silent.gain.value=0;
+    source.connect(processor);
+    processor.connect(silent);
+    silent.connect(ctx.destination);
+
+    $('status').textContent='Mic aktif — ULTRA LOW LATENCY';
+    await devices();
+  }catch(e){
+    $('status').textContent='Gagal: '+e.message;
+  }
+}
+
+function stop(){
+  if(processor){
+    processor.onaudioprocess=null;
+    try{processor.disconnect()}catch(e){}
+    processor=null;
+  }
+  if(source){
+    try{source.disconnect()}catch(e){}
+    source=null;
+  }
+  if(stream){
+    stream.getTracks().forEach(t=>t.stop());
+    stream=null;
+  }
+  if(raf) cancelAnimationFrame(raf);
+  raf=null;
+  if(ctx){
+    try{ctx.close()}catch(e){}
+    ctx=null;
+  }
+  master=null;
+  lastHitSample=-999999;
+  detectPrev=0;
+  detectEnv=0;
+  $('status').textContent='Mic berhenti';
+}
+
+function flash(id){
+  const e=$(id);
+  e.classList.add('on');
+  setTimeout(()=>e.classList.remove('on'),60);
+}
+
+function hitBassAt(t){
+  if(!ctx || !master) return;
+
+  const v=+$('bassVol').value;
+  const b=+$('body').value;
+  const a=+$('attack').value;
+  const d=+$('bassDecay').value;
+
+  const o=ctx.createOscillator();
+  const g=ctx.createGain();
+  const c=ctx.createOscillator();
+  const cg=ctx.createGain();
+
+  o.type='sine';
+  o.frequency.setValueAtTime(118,t);
+  o.frequency.exponentialRampToValueAtTime(43,t+0.105);
+
+  g.gain.setValueAtTime(0.0001,t);
+  g.gain.linearRampToValueAtTime(Math.max(0.0001,.88*v*b),t+0.0012);
+  g.gain.exponentialRampToValueAtTime(0.001,t+Math.max(.08,d));
+
+  c.type='triangle';
+  c.frequency.setValueAtTime(1450,t);
+  c.frequency.exponentialRampToValueAtTime(250,t+0.022);
+  cg.gain.setValueAtTime(0.0001,t);
+  cg.gain.linearRampToValueAtTime(Math.max(0.0001,.18*a*v),t+0.0008);
+  cg.gain.exponentialRampToValueAtTime(0.001,t+0.032);
+
+  o.connect(g).connect(master);
+  c.connect(cg).connect(master);
+
+  o.start(t);
+  c.start(t);
+  o.stop(t+Math.max(.11,d)+.03);
+  c.stop(t+.045);
+}
+
+function hitBass(){
+  if(!ctx) return;
+  hitBassAt(ctx.currentTime);
+}
+
+function hitTam(){
+  if(!ctx || !master) return;
+  const t=ctx.currentTime;
+  const o=ctx.createOscillator();
+  const g=ctx.createGain();
+
+  o.type='sine';
+  o.frequency.setValueAtTime(205,t);
+  o.frequency.exponentialRampToValueAtTime(112,t+.2);
+  g.gain.setValueAtTime(.0001,t);
+  g.gain.linearRampToValueAtTime(.6,t+.0015);
+  g.gain.exponentialRampToValueAtTime(.001,t+.45);
+
+  o.connect(g).connect(master);
+  o.start(t);
+  o.stop(t+.48);
+  flash('tam');
+}
+
+$('connect').onclick=connect;
+$('stop').onclick=stop;
+
+$('test').onclick=async()=>{
+  if(!ctx){
+    await connect();
+    if(ctx) hitBass();
+  }else{
+    hitBass();
+  }
+};
+
+$('bass').onclick=()=>{
+  if(!ctx) return;
+  hitBass();
+  flash('bass');
+};
+
+$('tam').onclick=()=>{
+  if(!ctx) return;
+  hitTam();
+};
+
+$('cal').onclick=()=>{
+  if(!processor || !ctx){
+    alert('Hubungkan mic dulu.');
+    return;
+  }
+
+  $('status').textContent='Kalibrasi 2 detik... jangan pukul mic';
+  let max=0;
+  const start=performance.now();
+
+  // Temporarily collect level using the same low-latency processing path.
+  const old=processor.onaudioprocess;
+  processor.onaudioprocess=(ev)=>{
+    const ch=ev.inputBuffer.getChannelData(0);
+    let sum=0,peak=0;
+    for(let i=0;i<ch.length;i++){
+      const x=ch[i];
+      sum+=x*x;
+      peak=Math.max(peak,Math.abs(x));
+    }
+    const level=Math.max(Math.sqrt(sum/ch.length),peak*.42);
+    max=Math.max(max,level);
+    updateMeterFromRms(level);
+
+    if(performance.now()-start>=2000){
+      processor.onaudioprocess=old;
+      $('threshold').value=Math.min(.8,Math.max(.015,max*3));
+      show();
+      $('status').textContent='Kalibrasi selesai — siap memukul';
+    }
+  };
+};
+
+document.addEventListener('keydown',e=>{
+  if(e.repeat)return;
+  if(e.key==='1'){
+    if(ctx) hitBass();
+    flash('bass');
+  }
+  if(e.key==='2'){
+    if(ctx) hitTam();
+    flash('tam');
+  }
+});
+
+devices();
+</script>
+</body>
+</html>
